@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1d63c9">
+<meta name="description" content="Crate School Books: flip-book learning for UKG — Maths, English, हिंदी and ਪੰਜਾਬੀ, with read-aloud pages, games in every chapter, stickers and a report card.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Crate School Books">
+<meta property="og:title" content="Crate School Books">
+<meta property="og:description" content="Flip-books for UKG with games in every chapter: Maths, English, हिंदी and ਪੰਜਾਬੀ.">
+<meta property="og:image" content="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Crate Books">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Crate School Books</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@500;600;700;800&family=Baloo+Paaji+2:wght@500;600;700;800&family=Lilita+One&family=Permanent+Marker&display=swap">
+<link rel="stylesheet" href="css/books.css">
+</head>
+<body>
+
+<!-- ============ BOOKCASE ============ -->
+<div id="shelfView">
+  <div class="wrap">
+    <header class="bc-top">
+      <div class="logo">
+        <span class="crate-ico" aria-hidden="true"></span>
+        <div class="logo-t"><b>Crate School</b><small>My Bookcase</small></div>
+      </div>
+      <div class="top-actions">
+        <button class="chip whochip" id="whoChip" type="button" aria-label="Change reader"><span class="av"></span><span class="nm"></span>▾</button>
+        <button class="chip plain" id="grownBtn" type="button">👪 Grown-ups</button>
+      </div>
+    </header>
+
+    <h1 class="hello" id="hello">Pick a book 📚</h1>
+    <p class="hello-sub">Tap a book to open it. Every chapter has pictures to hear, games to play and a sticker to win.</p>
+
+    <section class="case" aria-label="My books">
+      <h2>My books</h2>
+      <div class="shelf" id="shelf"></div>
+    </section>
+    <section class="case" aria-label="Games and coming soon">
+      <h2>Games &amp; coming soon</h2>
+      <div class="shelf" id="shelf2"></div>
+    </section>
+
+    <div class="bc-tips">
+      <div class="tipcard"><b>⏱️ A little every day</b>10–15 minutes a day works better than one long session. The book reminds your child to take a stretch break.</div>
+      <div class="tipcard"><b>👀 ✏️ 🎯 Learn in steps</b>Each chapter goes look &amp; listen → trace → practise with hints → play → check yourself.</div>
+      <div class="tipcard"><b>🌟 Praise the effort</b>Mistakes get a gentle hint first. Say “you tried hard!” as often as “you got it right!”</div>
+      <div class="tipcard"><b>📋 Use the report card</b>Near the back of each book. It shows each chapter's level and the page to practise next.</div>
+    </div>
+    <p class="bc-foot">Crate School Books · progress is saved on this device</p>
+  </div>
+</div>
+
+<!-- ============ READER ============ -->
+<div id="readerView" hidden>
+  <div class="rtop">
+    <button class="rback" id="rBack" type="button" aria-label="Back to bookcase"><span class="crate-ico" aria-hidden="true"></span><span>Books</span></button>
+    <div class="rtitle" id="rTitle"></div>
+    <button class="chip whochip" id="rWho" type="button" aria-label="Change reader"><span class="av"></span><span class="nm"></span></button>
+    <button class="xbtn" id="rClose" type="button" aria-label="Close book">✕</button>
+  </div>
+  <div class="rbar">
+    <div class="tools" id="tools" role="toolbar" aria-label="Book tools"></div>
+    <div class="pgbox">
+      <input id="pgIn" inputmode="numeric" aria-label="Page number">
+      <span id="pgTot"></span>
+      <button id="pgGo" type="button">GO</button>
+    </div>
+  </div>
+  <div class="stage" id="stage">
+    <button class="nav prev" id="navPrev" type="button" aria-label="Previous page"></button>
+    <div class="holder" id="holder">
+      <div class="bookbox" id="bookbox">
+        <div class="bookscale" id="bookscale">
+          <div class="slot L" id="slotA"></div>
+          <div class="slot R" id="slotB"></div>
+          <div class="spine" id="spine"></div>
+        </div>
+      </div>
+    </div>
+    <button class="nav next" id="navNext" type="button" aria-label="Next page"></button>
+  </div>
+  <div class="rfoot">
+    <button id="fPrev" type="button" aria-label="Previous page"></button>
+    <span id="fPg"></span>
+    <button id="fNext" type="button" aria-label="Next page"></button>
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<script src="js/core.js"></script>
+<script src="js/gens.js"></script>
+<script src="js/pages.js"></script>
+<script src="js/games.js"></script>
+<!-- BOOKS: add a new book by adding its file here (see books/_template.js) -->
+<script src="books/maths.js"></script>
+<script src="books/english.js"></script>
+<script src="books/hindi.js"></script>
+<script src="books/punjabi.js"></script>
+<!-- /BOOKS -->
+<script src="js/reader.js"></script>
+<script>
+  if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
+    addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+  }
+</script>
+</body>
+</html>
