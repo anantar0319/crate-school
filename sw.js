@@ -1,6 +1,6 @@
 /* Crate School Books - offline support.
  * Network first (so updates show up straight away), cache as the fallback when offline. */
-const CACHE = "crate-books-v1";
+const CACHE = "crate-books-v2";
 const CORE = ["./", "index.html", "crate.html", "css/books.css", "js/core.js", "js/gens.js", "js/pages.js", "js/games.js", "js/reader.js",
   "books/maths.js", "books/english.js", "books/hindi.js", "books/punjabi.js", "manifest.json", "icon.svg", "icon.png"];
 

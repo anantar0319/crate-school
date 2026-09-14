@@ -434,7 +434,14 @@ function settings(){
           if(confirm("Remove " + p.name + " and all their progress?")){ CS.store.removeProfile(p.id); close(); onReaderChange(); settings(); }
         }}, "Remove") : null));
     });
-    const voice = l => CS.hasVoice(l) ? "found ✓" : "not found";
+    const voiceInfo = h("p", {style:{fontSize:"13px"}});
+    const paintVoices = () => {
+      const r = CS.voiceReport(), f = v => v ? "found ✓" : "not found";
+      voiceInfo.textContent = !r.tts ? "This browser has no read-aloud support. Open the link in Chrome (Android) or Safari (iPhone)."
+        : r.voices === 0 ? "No read-aloud voices found yet. Tap “Test sound”; if you hear nothing, see the tips below."
+        : "Voices on this device — English: " + f(r.en) + " · Hindi: " + f(r.hi) + " · Punjabi: " + f(r.pa) + (r.pa ? "" : " (Punjabi is read by the Hindi voice)");
+    };
+    paintVoices();
     s.append(
       h("h2", {}, "Grown-ups corner"),
       h("h3", {}, "Settings"),
@@ -442,8 +449,9 @@ function settings(){
       tog("Punjabi helper voice", "Repeats instructions in ਪੰਜਾਬੀ in the English and Maths books", "helper"),
       tog("Brain-break reminders", "A short stretch break after 15 minutes of reading", "breaks"),
       tog("Teacher tips on pages", "Yellow sticky notes with teaching ideas", "notes", "Shown", "Hidden"),
-      h("p", {style:{fontSize:"13px"}}, "Voices on this device — English: " + voice("en") + " · Hindi: " + voice("hi") + " · Punjabi: " + voice("pa") +
-        (CS.hasVoice("pa") ? "" : " (Punjabi is read by the Hindi voice)")),
+      h("div", {class:"srow"}, h("button", {class:"sbtn", type:"button", onclick:() => testSound().then(paintVoices)}, "🔊 Test sound")),
+      voiceInfo,
+      soundHelp(),
       h("h3", {}, "Progress · " + who.av + " " + who.name),
       h("table", {class:"ptable"}, h("tr", {}, h("th", {}, "Book"), h("th", {}, "Stars"), h("th", {}, "Stickers"), h("th", {}, "Pages"), h("th", {}, "Time")), rows),
       h("p", {style:{fontSize:"13px"}}, "Open a book's Report Card page (near the back) to see which chapter to practise next."),
@@ -455,6 +463,29 @@ function settings(){
         h("button", {class:"sbtn", type:"button", onclick:close}, "Done")),
       h("p", {style:{fontSize:"12px", marginTop:"14px"}}, "Progress is saved on this device only. Crate School Books v" + CS.VERSION + "."));
   });
+}
+
+/* ===================== SOUND CHECK ===================== */
+async function testSound(){
+  if(!CS.store.set.sound){ CS.store.set.sound = true; CS.store.save(); paintTools(); }
+  CS.sfx.unlock(); CS.sfx.good();
+  CS.toast("🔊 Testing: English, हिंदी, ਪੰਜਾਬੀ");
+  await CS.say("Hello! The sound is working.", "en");
+  await CS.say("नमस्ते! आवाज़ आ रही है।", "hi", {seq:true});
+  await CS.say("ਸਤ ਸ੍ਰੀ ਅਕਾਲ!", "pa", {seq:true});
+}
+CS.testSound = testSound;
+function soundHelp(){
+  const tips = ["Turn the volume up. On iPhone, turn Silent mode off.",
+    "Tap a picture on the page first — phones only allow sound after a tap.",
+    "Check the 🔊 button in the book's toolbar is not crossed out.",
+    "If the link opened inside WhatsApp, use ⋮ → Open in Chrome (Android) or the compass → Open in Safari (iPhone).",
+    "Android: Settings → search “Text-to-speech” → preferred engine Google → Install voice data → add English (India or UK) and Hindi, and Punjabi if listed.",
+    "iPhone: Settings → Accessibility → Spoken Content → Voices → download English and Hindi voices.",
+    "Then close the tab, open the link again and tap Test sound."];
+  return h("details", {style:{fontSize:"13px", margin:"6px 0"}},
+    h("summary", {style:{fontWeight:"800", cursor:"pointer"}}, "No sound on a phone?"),
+    h("ol", {style:{paddingLeft:"20px", lineHeight:"1.5", margin:"6px 0"}}, tips.map(t => h("li", {}, t))));
 }
 
 /* ===================== BRAIN BREAK ===================== */
@@ -493,6 +524,7 @@ function init(){
   $("whoChip").addEventListener("click", chooseReader);
   $("rWho").addEventListener("click", chooseReader);
   $("grownBtn").addEventListener("click", grownups);
+  $("soundTest").addEventListener("click", testSound);
   $("rClose").addEventListener("click", closeBook);
   $("rBack").addEventListener("click", closeBook);
   $("navPrev").innerHTML = svg("prev"); $("navNext").innerHTML = svg("next");

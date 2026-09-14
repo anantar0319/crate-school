@@ -210,33 +210,70 @@ function pickVoice(lang){
 }
 CS.hasVoice = lang => !!pickVoice(LANG[lang] || lang);
 
-let gen = 0;       // bumps whenever something new starts talking; read-along loops watch it
+const hasTTS = () => "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
+CS.voiceReport = () => {
+  loadVoices();
+  return {tts:hasTTS(), voices:VOICES.length, en:!!pickVoice("en-GB"), hi:!!pickVoice("hi-IN"), pa:!!pickVoice("pa-IN")};
+};
+
+/* Phones only allow sound after the child touches the screen. On the very first touch we start
+ * the audio engine and speak one silent word; that unlocks speech for the rest of the visit (iPhone). */
+let unlocked = false;
+function unlockAudio(){
+  if(unlocked) return;
+  unlocked = true;
+  ac();
+  try{ if(actx){ const b = actx.createBuffer(1, 1, 22050), s = actx.createBufferSource(); s.buffer = b; s.connect(actx.destination); s.start(0); } }catch(e){}
+  try{ if(hasTTS()){ const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } }catch(e){}
+  loadVoices();
+}
+["pointerdown", "touchend", "click", "keydown"].forEach(ev => document.addEventListener(ev, unlockAudio, {capture:true, passive:true}));
+
+let gen = 0;          // bumps whenever something new starts talking; read-along loops watch it
+let token = 0;        // the newest say() call; an older one still waiting must not start
+let lastCancel = 0;
+let current = null;   // keep the live utterance referenced: Chrome and Safari can drop it mid-sentence
+function cancelSpeech(){
+  try{ if(hasTTS() && (speechSynthesis.speaking || speechSynthesis.pending)){ speechSynthesis.cancel(); lastCancel = Date.now(); } }catch(e){}
+}
 CS.sayGen = () => gen;
-CS.stopSay = function(){ gen++; try{ speechSynthesis.cancel(); }catch(e){} };
+CS.stopSay = function(){ gen++; token++; cancelSpeech(); };
 /* say(text, lang, {seq, rate}) -> Promise that resolves when speech ends.
- * seq:true is for read-along loops, which must not cancel themselves. */
+ * seq:true is for read-along loops, which must not cancel themselves.
+ * Android Chrome silently drops a speak() that comes right after cancel(), so speech
+ * starts a moment after any cancel instead of straight away. */
 CS.say = function(text, lang, o){
   o = o || {};
   if(!o.seq) gen++;
+  const my = ++token;
   return new Promise(resolve => {
-    if(!S.set.sound || !text || !("speechSynthesis" in window)){ resolve(); return; }
+    if(!S.set.sound || !text || !hasTTS()){ resolve(); return; }
     let done = false, timer = 0;
     const fin = () => { if(!done){ done = true; clearTimeout(timer); resolve(); } };
-    try{
-      speechSynthesis.cancel();
-      const L = lang || "en";
-      let tx = String(text), vl = LANG[L] || L;
-      if(L === "pa" && !pickVoice("pa-IN")){ tx = CS.g2d(tx); vl = "hi-IN"; }
-      const u = new SpeechSynthesisUtterance(tx), v = pickVoice(vl);
-      if(v){ u.voice = v; u.lang = v.lang; } else u.lang = vl;
-      u.rate = o.rate || (L === "en" ? 0.92 : 0.86);
-      u.pitch = o.pitch || 1.1;
-      u.onend = fin; u.onerror = fin;
-      speechSynthesis.speak(u);
-      timer = setTimeout(fin, 1800 + tx.length * 120);
-    }catch(e){ fin(); }
+    const L = lang || "en";
+    let tx = String(text), vl = LANG[L] || L;
+    if(L === "pa" && !pickVoice("pa-IN")){ tx = CS.g2d(tx); vl = "hi-IN"; }
+    const start = () => {
+      if(my !== token){ fin(); return; }
+      try{
+        const u = new SpeechSynthesisUtterance(tx), v = pickVoice(vl);
+        if(v){ u.voice = v; u.lang = v.lang; } else u.lang = vl;
+        u.rate = o.rate || (L === "en" ? 0.92 : 0.86);
+        u.pitch = o.pitch || 1.1;
+        u.volume = 1;
+        u.onend = fin; u.onerror = fin;
+        current = u;
+        try{ speechSynthesis.resume(); }catch(e){}   // Chrome on Android can be left paused
+        speechSynthesis.speak(u);
+        timer = setTimeout(fin, 2500 + tx.length * 130);
+      }catch(e){ fin(); }
+    };
+    cancelSpeech();
+    const wait = 120 - (Date.now() - lastCancel);
+    if(wait > 0) setTimeout(start, wait); else start();
   });
 };
+CS._speechDebug = () => ({unlocked, token, gen, current:current && current.text});
 
 /* ===================== WORDS ===================== */
 const WORDS = {

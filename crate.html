@@ -658,18 +658,37 @@
     if(family.length) voiceCache[lang]=hit||null;
     return hit||null;
   }
+  // Phones: Android Chrome drops a speak() that follows cancel() at once, and Chrome/Safari can
+  // lose an utterance nobody holds on to. So speech starts a moment after any cancel, and the
+  // last few utterances stay referenced. The first touch unlocks audio and speech (iPhone).
+  let lastCancel=0, talkTok=0; const keep=[];
+  function hush(){
+    try{ const ss=window.speechSynthesis; if(ss && (ss.speaking||ss.pending)){ ss.cancel(); lastCancel=Date.now(); } }catch(e){}
+    talkTok++;
+  }
   function utter(text,lang,rate,pitch){
     const u=new SpeechSynthesisUtterance(text);
     const v=pickVoice(lang);
     if(v){ u.voice=v; u.lang=v.lang; } else { u.lang=lang; }
-    u.rate=rate==null?0.94:rate; u.pitch=pitch==null?1.2:pitch;
-    window.speechSynthesis.speak(u);
+    u.rate=rate==null?0.94:rate; u.pitch=pitch==null?1.2:pitch; u.volume=1;
+    keep.push(u); if(keep.length>6) keep.shift();
+    const tok=talkTok, go=()=>{ if(tok!==talkTok) return; try{ window.speechSynthesis.resume(); window.speechSynthesis.speak(u); }catch(e){} };
+    const wait=120-(Date.now()-lastCancel);
+    if(wait>0) setTimeout(go,wait); else go();
   }
+  let audioOn=false;
+  function unlockAudio(){
+    if(audioOn) return; audioOn=true;
+    ctx();
+    try{ if(window.speechSynthesis){ const u=new SpeechSynthesisUtterance(" "); u.volume=0; window.speechSynthesis.speak(u); } }catch(e){}
+    loadVoices();
+  }
+  ["pointerdown","touchend","click","keydown"].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true,passive:true}));
   function speak(text,lang,extra){
     if(!save.sound || !text) return;
     try{
       if(!window.speechSynthesis) return;
-      window.speechSynthesis.cancel();
+      hush();
       utter(text,lang||"en-GB");
       if(extra) speakPunjabi(extra);
     }catch(e){}
@@ -681,7 +700,7 @@
     if(!force && !save.punjabi) return;
     try{
       if(!window.speechSynthesis) return;
-      if(force) window.speechSynthesis.cancel();
+      if(force) hush();
       const paVoice=pickVoice("pa-IN");
       if(paVoice && pa.gur) utter(pa.gur,"pa-IN",0.9,1.15);
       else if(pa.dev) utter(pa.dev,"hi-IN",0.9,1.15);
