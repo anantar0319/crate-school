@@ -20,6 +20,9 @@
  *  pop     {target, pool} or {make:"5", targets:[...], pool}        balloon game
  *  colour  {scene:"fruits|shapes|garden", names, colours, free}     colour by instruction
  *  rhyme   {lines:[...], pics}                                      sing-along with line highlight
+ *  build   {fams:[{end:"at", onsets:["b","c","z"], words:{bat:"\u{1F987}", cat:"\u{1F431}"}}]}
+ *                  word builder: tap a first letter to make a word. Onsets that are
+ *                  NOT in `words` are letters that make no word - spotting that is the skill.
  *  crate   {subject, level, face}                                   link to the timed Crate game
  * Any page can have  title, say (instruction to read aloud), tip (teacher sticky note).
  * An item can be "🍎", "cat", or {t, pic, n, sw, shape, say}.
@@ -27,6 +30,7 @@
  * GENERATORS for mcq/quiz (js/gens.js): count more after before between gap compare symbol
  *  add sub addNum subNum skip table numWord wordNum shapeName shapeFind shapeReal pattern
  *  picWord wordPic firstLetter letterPic seqGap seqNext binary swName nameSw glyphName
+ *  famWord famPick digraph nearWord spell blend      (phonics - see books/phonics.js)
  *  nameGlyph caseMatch missing rhyme opposite sound
  * ========================================================================== */
 (function(){

@@ -126,7 +126,19 @@ const ASK = {
   rhymeHint:{en:["Rhyming words sound the same at the end, like cat and hat."]},
   opposite:{en:["What is the opposite of {w}?"]},
   sound:{en:["Who says {s}?"]},
-  soundHint:{en:["Make the sound yourself: {s}!"]}
+  soundHint:{en:["Make the sound yourself: {s}!"]},
+  famWord:{en:["Which word is in the -{e} family?","Which word is in the {e} family?"]},
+  famHint:{en:["Every word in this family ends with -{e}."]},
+  famPick:{en:["Which family does it belong to?","{w}. Which family does {w} belong to?"]},
+  famPickHint:{en:["Listen to the end of the word: {w}."]},
+  digraph:{en:["Which sound is missing?","Which sound is missing in {w}? Is it ch or sh?"]},
+  digraphHint:{en:["Say it slowly and listen: {w}."]},
+  nearWord:{en:["Which word is it?"]},
+  nearHint:{en:["Listen to the middle sound. It is the vowel that changes."]},
+  spell:{en:["Tap 🔊, then find the word","Listen. {w}. Which one says {w}?"]},
+  spellHint:{en:["Tap the speaker again and say the sounds one by one."]},
+  blend:{en:["Put the sounds together. Which word is it?","{s}. Which word is it?"]},
+  blendHint:{en:["Say them faster and faster until they join up."]}
 };
 function A(key, lang, args, vars, spoken){
   if(args && args[spoken ? "sayAsk" : "ask"]) return CS.fmt(args[spoken ? "sayAsk" : "ask"], vars);
@@ -346,5 +358,56 @@ GEN.sound = (a, L) => {
   const it = pick(a.pool), c = choices(it, a.pool, x => x.snd);
   return Q("sound", L, a, {s:it.snd}, {key:"so" + it.w, vis:{k:"ear", t:it.snd, say:it.snd}, opts:c.list.map(x => ({pic:x.pic, say:x.w})),
     ans:c.ans, hint:A("soundHint", L, null, {s:it.snd}), reveal:"The " + it.w + " says " + it.snd});
+};
+
+/* ---------- phonics: word families, digraphs, dictation ---------- */
+const VOW = ["a", "e", "i", "o", "u"];
+/* bed -> bad, bid, bod, bud : swap the vowel to make near-miss spellings */
+const swapVowel = w => {
+  const c = w.split(""), i = c.findIndex(x => VOW.indexOf(x) >= 0);
+  if(i < 0) return [];
+  return VOW.filter(v => v !== c[i]).map(v => { const d = c.slice(); d[i] = v; return d.join(""); });
+};
+/* shell -> __ell, torch -> tor__ */
+const blankOut = (w, d) => w.indexOf(d) === 0 ? "__" + w.slice(d.length)
+  : w.slice(-d.length) === d ? w.slice(0, -d.length) + "__" : w.replace(d, "__");
+const famWords = fams => [].concat.apply([], fams.map(f => f.words));
+/* wrong spellings: the word's own near misses first, then other words of the same length */
+const misspell = (it, pool) => (it.near || swapVowel(it.w))
+  .concat(shuffle(pool.map(x => x.w).filter(w => w.length === it.w.length)))
+  .filter(w => w !== it.w);
+
+GEN.famWord = (a, L) => {
+  const fam = pick(a.fams), ans = pick(fam.words);
+  const others = shuffle(famWords(a.fams.filter(f => f !== fam))).filter(w => w !== ans).slice(0, 3);
+  const list = shuffle([ans].concat(others));
+  return Q("famWord", L, a, {e:fam.end}, {key:"fw" + fam.end + ans, vis:{k:"big", t:"-" + fam.end},
+    opts:list.map(t => ({t})), ans:list.indexOf(ans), hint:A("famHint", L, null, {e:fam.end}), reveal:ans});
+};
+GEN.famPick = (a, L) => {
+  const fam = pick(a.fams), w = pick(fam.words);
+  const c = choices(fam, a.fams, f => f.end);
+  return Q("famPick", L, a, {w}, {key:"fp" + w, vis:{k:"big", t:w}, opts:c.list.map(f => ({t:"-" + f.end})),
+    ans:c.ans, hint:A("famPickHint", L, null, {w}), reveal:w + " is in the -" + fam.end + " family"});
+};
+GEN.digraph = (a, L) => {
+  const it = pick(a.pool), c = choices(it.d, a.digraphs || ["ch", "sh", "th", "wh"]);
+  return Q("digraph", L, a, {w:it.w}, {key:"dg" + it.w, vis:{k:"picword", pic:it.pic, t:blankOut(it.w, it.d)},
+    opts:c.list.map(t => ({t})), ans:c.ans, hint:A("digraphHint", L, null, {w:it.w}), reveal:it.w});
+};
+GEN.nearWord = (a, L) => {
+  const it = pick(a.pool), list = shuffle([it.w].concat(shuffle(it.near || swapVowel(it.w)).slice(0, 3)));
+  return Q("nearWord", L, a, {}, {key:"nw" + it.w, vis:{k:"pic", pic:it.pic}, opts:list.map(t => ({t})),
+    ans:list.indexOf(it.w), hint:A("nearHint", L), reveal:it.w});
+};
+GEN.spell = (a, L) => {
+  const it = pick(a.pool), list = shuffle([it.w].concat(misspell(it, a.pool).slice(0, 3)));
+  return Q("spell", L, a, {w:it.w}, {key:"sp" + it.w, vis:{k:"ear", say:it.w + ". " + it.w},
+    opts:list.map(t => ({t})), ans:list.indexOf(it.w), hint:A("spellHint", L), reveal:it.w});
+};
+GEN.blend = (a, L) => {
+  const it = pick(a.pool), parts = CS.graphemes(it.w), c = choices(it, a.pool, x => x.w);
+  return Q("blend", L, a, {s:parts.join(" - ")}, {key:"bl" + it.w, vis:{k:"row", items:parts, tight:true},
+    opts:c.list.map(x => ({t:x.w})), ans:c.ans, hint:A("blendHint", L), reveal:it.w});
 };
 })();

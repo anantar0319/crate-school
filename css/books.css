@@ -631,6 +631,31 @@ button{cursor:pointer}
 .back .more span{display:block;font-size:34px}
 .back .cv-tab{position:static;transform:none;border-radius:14px;margin-top:10px}
 
+/* word builder */
+.wordbuild{height:100%;display:flex;flex-direction:column;gap:8px}
+.wbbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none}
+.wbtabs{display:flex;gap:6px;flex-wrap:wrap}
+.wbtab{border:0;border-radius:99px;background:#fff;box-shadow:0 3px 0 #d5dbe7;color:var(--ink2);font:800 18px/1 var(--f-en);
+  padding:8px 14px;cursor:pointer}
+.wbtab.on{background:var(--main);color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.wbbar em{font-style:normal;font-weight:800;color:#fff;background:var(--main);border-radius:99px;padding:4px 12px;white-space:nowrap;font-size:16px}
+.wbstage{flex:none;background:var(--soft);border-radius:20px;padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.wbpic{font-size:44px;height:52px;line-height:52px}
+.wbword{display:flex;align-items:center;gap:2px;font:800 62px/1.1 var(--f-en)}
+.wbword .wbon{display:grid;place-items:center;min-width:62px;height:76px;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 4px #c9d5e8;color:#9fb0c8}
+.wbword .wbon.ok{background:#e6f7ea;box-shadow:inset 0 0 0 4px #35b25a;color:#1c6b33}
+.wbword .wbon.no{background:#ffeaea;box-shadow:inset 0 0 0 4px #e05a5a;color:#a33}
+.wbword .wbend{color:var(--ink2);padding:0 6px}
+.wbkeys{flex:none;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.wbkey{width:62px;height:62px;border:0;border-radius:16px;background:#fff;box-shadow:0 5px 0 #d5dbe7;color:var(--ink2);
+  font:800 34px/1 var(--f-en);cursor:pointer}
+.wbkey.got{background:#e6f7ea;box-shadow:0 5px 0 #b7dcc2;color:#1c6b33}
+.wbshelf{flex:1;min-height:0;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;justify-content:center;
+  background:#fff;border-radius:18px;box-shadow:inset 0 0 0 3px var(--soft);padding:8px}
+.wbslot{display:inline-flex;align-items:center;gap:4px;border-radius:12px;background:#f2f5fa;color:#9fb0c8;
+  font:800 20px/1 var(--f-en);padding:8px 12px;min-width:56px;justify-content:center}
+.wbslot.got{background:#e6f7ea;color:#1c6b33}
+
 /* ================= PRINT ================= */
 #printArea{display:none}
 @media print{

@@ -496,6 +496,92 @@ PT.rhyme = function(page, ctx){
       h("button", {class:"kbtn sun", type:"button", onclick:() => { CS.stopSay(); sing(0, lines.length); }}, "▶ " + ctx.T("singAlong"))));
 };
 
+/* ===================== WORD BUILDER =====================
+ * Change the first letter to make new words: b+at, c+at, h+at.
+ * page.fams = [{end:"at", onsets:["b","c","h","z"], words:{bat:"🦇", cat:"🐱", hat:"🎩"}}]
+ * Onsets that are not in `words` are real letters that do NOT make a word - that is the point. */
+PT.build = function(page, ctx){
+  const fams = page.fams.map(f => ({end:f.end, onsets:f.onsets.slice(), words:f.words, keys:Object.keys(f.words)}));
+  const total = fams.reduce((n, f) => n + f.keys.length, 0);
+  const found = new Set();
+  let fi = 0, mistakes = 0, done = false;
+
+  const tabs = h("div", {class:"wbtabs"});
+  const slotOn = h("span", {class:"wbon"}, "?"), slotEnd = h("span", {class:"wbend"}, "");
+  const word = h("div", {class:"wbword"}, slotOn, slotEnd);
+  const pic = h("div", {class:"wbpic"}, "");
+  const keys = h("div", {class:"wbkeys"});
+  const shelf = h("div", {class:"wbshelf"});
+  const counter = h("em", {}, "0 / " + total);
+  const root = h("div", {class:"wordbuild", "data-noswipe":""},
+    h("div", {class:"wbbar"}, tabs, counter), h("div", {class:"wbstage"}, pic, word), keys, shelf);
+
+  fams.forEach((f, j) => {
+    const b = h("button", {class:"wbtab" + (j === 0 ? " on" : ""), type:"button"}, "-" + f.end);
+    b.addEventListener("click", () => { CS.sfx.tap(); select(j); });
+    tabs.appendChild(b);
+  });
+  if(fams.length < 2) tabs.style.visibility = "hidden";
+
+  function select(j){
+    fi = j;
+    [...tabs.children].forEach((b, k) => b.classList.toggle("on", k === j));
+    slotOn.textContent = "?"; slotOn.className = "wbon"; pic.textContent = "";
+    slotEnd.textContent = fams[j].end;
+    drawKeys(); drawShelf();
+  }
+  function drawKeys(){
+    const f = fams[fi];
+    keys.innerHTML = "";
+    f.onsets.forEach(o => {
+      const made = o + f.end, got = found.has(made);
+      const b = h("button", {class:"wbkey" + (got ? " got" : ""), type:"button"}, o);
+      b.addEventListener("click", () => tap(o, b));
+      keys.appendChild(b);
+    });
+  }
+  function drawShelf(){
+    const f = fams[fi];
+    shelf.innerHTML = "";
+    f.keys.forEach(w => {
+      const got = found.has(w);
+      shelf.appendChild(h("span", {class:"wbslot" + (got ? " got" : "")},
+        got ? (f.words[w] ? f.words[w] + " " : "") + w : "?"));
+    });
+  }
+  function tap(o, btn){
+    if(done) return;
+    CS.sfx.unlock();
+    const f = fams[fi], made = o + f.end, real = f.keys.indexOf(made) >= 0;
+    slotOn.textContent = o;
+    slotOn.className = "wbon" + (real ? " ok" : " no");
+    pic.textContent = real ? (f.words[made] || "") : "";
+    if(real){
+      if(!found.has(made)){
+        found.add(made); CS.sfx.good(); CS.bump(btn);
+        btn.classList.add("got"); drawShelf();
+        counter.textContent = found.size + " / " + total;
+      }
+      ctx.say(o + "... " + f.end + ". " + made + "!");
+      if(found.size >= total) setTimeout(finish, 1100);
+    } else {
+      mistakes++; CS.sfx.bad(); CS.shake(btn);
+      ctx.say(o + "... " + f.end + ". " + made + ". That is not a word. Try another letter.");
+    }
+  }
+  function finish(){
+    if(!ctx.alive() || done) return;
+    done = true;
+    CS.finishScore(root, ctx, CS.starsByMistakes(mistakes), Math.max(0, 100 - mistakes * 8), found.size + " / " + total, () => {
+      found.clear(); mistakes = 0; done = false;
+      counter.textContent = "0 / " + total; select(0);
+    });
+  }
+  select(0);
+  ctx.test = {run(){ fams.forEach(f => f.keys.forEach(w => found.add(w))); finish(); return true; }};
+  return root;
+};
+
 /* ===================== CRATE GAME LINK ===================== */
 PT.crate = function(page, ctx){
   const url = CS.CRATE_URL + "#subject=" + encodeURIComponent(page.subject) + "&level=" + page.level;

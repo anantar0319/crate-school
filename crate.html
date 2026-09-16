@@ -402,6 +402,38 @@
     {w:"sun",e:"☀️",v:"u"},{w:"bus",e:"🚌",v:"u"},{w:"cup",e:"🍵",v:"u"},{w:"nut",e:"🥜",v:"u"}
   ];
 
+  /* Word families, look-alike words and the two-letter sounds — the same ones
+     that are taught in the Sound Box book, so the game backs up the book. */
+  const FAMILY = [
+    {end:"at", words:["bat","cat","hat","mat","rat","sat"]},
+    {end:"an", words:["can","fan","man","pan","van"]},
+    {end:"ap", words:["cap","map","nap","tap"]},
+    {end:"en", words:["den","hen","men","pen","ten"]},
+    {end:"et", words:["jet","net","pet","wet"]},
+    {end:"ig", words:["big","dig","fig","pig","wig"]},
+    {end:"in", words:["bin","fin","pin","tin","win"]},
+    {end:"og", words:["dog","fog","jog","log"]},
+    {end:"ot", words:["cot","dot","hot","pot"]},
+    {end:"ug", words:["bug","hug","jug","mug","rug"]},
+    {end:"un", words:["bun","fun","run","sun"]}
+  ];
+  const DIGRAPH = [
+    {w:"shop",e:"🏪",d:"sh"},{w:"shirt",e:"👕",d:"sh"},{w:"shoes",e:"👟",d:"sh"},{w:"shark",e:"🦈",d:"sh"},
+    {w:"ship",e:"🚢",d:"sh"},{w:"shell",e:"🐚",d:"sh"},{w:"sheep",e:"🐑",d:"sh"},{w:"fish",e:"🐟",d:"sh"},
+    {w:"brush",e:"🖌️",d:"sh"},{w:"dish",e:"🍽️",d:"sh"},
+    {w:"chair",e:"🪑",d:"ch"},{w:"child",e:"👶",d:"ch"},{w:"torch",e:"🔦",d:"ch"},{w:"peach",e:"🍑",d:"ch"},
+    {w:"chips",e:"🍟",d:"ch"},{w:"cheese",e:"🧀",d:"ch"},{w:"chick",e:"🐤",d:"ch"},{w:"cherry",e:"🍒",d:"ch"},
+    {w:"lunch",e:"🍱",d:"ch"},{w:"church",e:"⛪",d:"ch"}
+  ];
+  const NEARWORD = [
+    {w:"bat",e:"🦇",near:["bet","bit","but"]},{w:"bed",e:"🛏️",near:["bad","bid","bud"]},
+    {w:"pin",e:"📌",near:["pan","pen","pun"]},{w:"pot",e:"🍲",near:["pat","pet","pit"]},
+    {w:"cup",e:"🍵",near:["cap","cop","cep"]},{w:"hat",e:"🎩",near:["hit","hot","hut"]},
+    {w:"bug",e:"🐛",near:["bag","beg","big"]},{w:"bag",e:"🎒",near:["beg","big","bug"]},
+    {w:"sun",e:"☀️",near:["san","sin","son"]},{w:"dog",e:"🐶",near:["dig","dug","deg"]},
+    {w:"box",e:"📦",near:["bax","bix","bux"]},{w:"pen",e:"🖊️",near:["pan","pin","pun"]}
+  ];
+
   const HI_FRUITS=[
     {name:"सेब",e:"🍎",f:"स"},{name:"आम",e:"🥭",f:"आ"},{name:"केला",e:"🍌",f:"क"},
     {name:"अंगूर",e:"🍇",f:"अ"},{name:"संतरा",e:"🍊",f:"स"},{name:"तरबूज",e:"🍉",f:"त"},
@@ -496,7 +528,12 @@
       {n:7, q:7, types:["picWord","missVowel"],          hint:"Words and vowels"},
       {n:8, q:7, types:["vowelSound","colourName"],      hint:"Sounds and colours"},
       {n:9, q:7, types:["picWord","fruitName","missVowel"], hint:"Words · fruits · vowels"},
-      {n:10,q:8, types:["picWord","vowelSound","colourPick","fruitName"], hint:"Everything mixed"}
+      {n:10,q:8, types:["picWord","vowelSound","colourPick","fruitName"], hint:"Everything mixed"},
+      {n:11,q:6, types:["famWord"],                      hint:"Word families · -at · -an · -ig"},
+      {n:12,q:6, types:["endSound"],                     hint:"Which family does it belong to?"},
+      {n:13,q:7, types:["nearWord"],                     hint:"Look-alike words · cap or cup"},
+      {n:14,q:7, types:["digraph"],                      hint:"Two letters, one sound · ch · sh"},
+      {n:15,q:8, types:["famWord","nearWord","digraph","picWord"], hint:"All the sounds mixed"}
     ],
     hindi:[
       {n:1, q:5, types:["hiSwarOrder"],                  hint:"स्वर क्रम"},
@@ -531,7 +568,8 @@
 
   const REWARDS = {
     maths:{3:{e:"🌟",n:"Star Sticker"},6:{e:"🏅",n:"Gold Medal"},9:{e:"🦄",n:"Unicorn Badge"},10:{e:"🏆",n:"Number Champion"}},
-    english:{3:{e:"🎈",n:"Balloon Badge"},6:{e:"📚",n:"Reading Badge"},9:{e:"🦋",n:"Butterfly Badge"},10:{e:"👑",n:"Word Crown"}},
+    english:{3:{e:"🎈",n:"Balloon Badge"},6:{e:"📚",n:"Reading Badge"},9:{e:"🦋",n:"Butterfly Badge"},10:{e:"👑",n:"Word Crown"},
+      13:{e:"🐝",n:"Sound Bee"},15:{e:"🏆",n:"Phonics Champion"}},
     hindi:{3:{e:"🪁",n:"पतंग बैज"},6:{e:"🌸",n:"फूल बैज"},9:{e:"🦚",n:"मोर बैज"},10:{e:"🏆",n:"हिंदी चैंपियन"}},
     punjabi:{3:{e:"🌻",n:"ਸੂਰਜਮੁਖੀ ਬੈਜ"},6:{e:"🥁",n:"ਢੋਲ ਬੈਜ"},9:{e:"🕊️",n:"ਪੰਛੀ ਬੈਜ"},12:{e:"🐘",n:"ਜਾਨਵਰ ਬੈਜ"},15:{e:"🏆",n:"ਪੰਜਾਬੀ ਚੈਂਪੀਅਨ"}}
   };
@@ -865,6 +903,49 @@
         visual:{kind:"emoji",e:w.e}, face:w.w.toUpperCase(), faceSmall:true,
         options:shuffle([w.v,...sample(vs,3,[w.v])]).map(x=>({label:x,word:true})),
         answer:w.v
+      };
+    },
+    famWord(){
+      const f=pick(FAMILY), ans=pick(f.words);
+      const rest=FAMILY.filter(x=>x!==f).reduce((a,x)=>a.concat(x.words),[]);
+      return {
+        ask:"Which word is in the -"+f.end+" family?",
+        speak:"Which word ends with "+f.end+"?",
+        visual:null, face:"- "+f.end, faceSmall:true,
+        options:shuffle([ans,...sample(rest,3,[ans])]).map(x=>({label:x,word:true})),
+        answer:ans
+      };
+    },
+    endSound(){
+      const f=pick(FAMILY), w=pick(f.words);
+      const others=sample(FAMILY,3,[f]).map(x=>"- "+x.end);
+      return {
+        ask:"Which family does this word belong to?",
+        speak:"Listen to the end of the word "+w+".",
+        visual:null, face:w.toUpperCase(), faceSmall:true,
+        options:shuffle(["- "+f.end,...others]).map(x=>({label:x,word:true})),
+        answer:"- "+f.end
+      };
+    },
+    nearWord(){
+      const it=pick(NEARWORD);
+      return {
+        ask:"Which word matches the picture?",
+        speak:"Look carefully. Which word is this?",
+        visual:{kind:"emoji",e:it.e}, face:"",
+        options:shuffle([it.w,...sample(it.near,3,[])]).map(x=>({label:x,word:true})),
+        answer:it.w
+      };
+    },
+    digraph(){
+      const it=pick(DIGRAPH);
+      const blank = it.w.indexOf(it.d)===0 ? "__"+it.w.slice(2) : it.w.slice(0,-2)+"__";
+      return {
+        ask:"Which sound is missing?",
+        speak:"Say it slowly. Which sound is missing?",
+        visual:{kind:"emoji",e:it.e}, face:blank, faceSmall:true,
+        options:shuffle([it.d,...sample(["ch","sh","th","wh"],3,[it.d])]).map(x=>({label:x,word:true})),
+        answer:it.d
       };
     }
   };
